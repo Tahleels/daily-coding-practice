@@ -1,0 +1,30 @@
+name: Daily Coding Practice
+on:
+  schedule:
+    - cron: '30 3 * * *'  # 8:30 AM IST
+  workflow_dispatch:
+
+jobs:
+  practice:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with: python-version: '3.11'
+    
+    - name: Run Daily Task
+      env:
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+      run: python scripts/generate-task.py
+      
+    - name: Commit
+      run: |
+        git config user.name "Daily Practice Bot"
+        git config user.email "bot@daily-practice.com"
+        if [ -n "$(git status --porcelain)" ]; then
+          git add .
+          git commit -m "✍️ Day $(date +%Y-%m-%d): $(cat solutions/LAST_TASK.txt)"
+          git push
+        fi
+      env: GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
